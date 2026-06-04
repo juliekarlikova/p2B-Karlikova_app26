@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>PixelFuel Energy</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f9;
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 0 15px rgba(0,0,0,0.15);
+}
+
+h1{
+    text-align:center;
+    color:#0077ff;
+}
+
+.logo{
+    text-align:center;
+    font-size:60px;
+}
+
+.product{
+    display:flex;
+    justify-content:space-between;
+    padding:10px;
+    margin:8px 0;
+    background:#eef4ff;
+    border-radius:10px;
+}
+
+input[type=number]{
+    width:60px;
+}
+
+.summary{
+    margin-top:20px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.customer{
+    margin-top:25px;
+}
+
+.customer input{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+}
+
+button{
+    margin-top:25px;
+    width:100%;
+    padding:15px;
+    font-size:20px;
+    background:#0077ff;
+    color:white;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#005ed1;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">⚡🔥</div>
+
+<h1>PixelFuel Energy</h1>
+
+<h3>Objednávka produktů</h3>
+
+<div id="produkty"></div>
+
+<div class="summary">
+Počet kusů: <span id="kusy">0</span><br>
+Celková cena: <span id="cena">0</span> Kč
+</div>
+
+<div class="customer">
+<input type="text" id="jmeno" placeholder="Jméno">
+<input type="text" id="prijmeni" placeholder="Příjmení">
+<input type="email" id="email" placeholder="E-mail">
+<input type="tel" id="telefon" placeholder="+420 123 456 789">
+</div>
+
+<button onclick="odeslatObjednavku()">
+ODESLAT OBJEDNÁVKU
+</button>
+
+</div>
+
+<script>
+
+let produkty=[];
+
+fetch("data_produkty.csv")
+.then(response=>response.text())
+.then(data=>{
+
+const rows=data.trim().split("\n").slice(1);
+
+const container=document.getElementById("produkty");
+
+rows.forEach((row,index)=>{
+
+const [nazev,cena]=row.split(",");
+
+produkty.push({
+nazev:nazev,
+cena:Number(cena)
+});
+
+container.innerHTML+=`
+<div class="product">
+<div>
+<strong>${nazev}</strong><br>
+${cena} Kč
+</div>
+
+<input
+type="number"
+min="0"
+value="0"
+oninput="prepocitat()"
+id="ks${index}">
+</div>
+`;
+
+});
+
+});
+
+function prepocitat(){
+
+let cena=0;
+let kusy=0;
+
+produkty.forEach((produkt,index)=>{
+
+const ks=
+Number(document.getElementById(`ks${index}`).value);
+
+kusy+=ks;
+cena+=ks*produkt.cena;
+
+});
+
+document.getElementById("kusy").innerText=kusy;
+document.getElementById("cena").innerText=cena;
+
+}
+
+function odeslatObjednavku(){
+
+const jmeno=document.getElementById("jmeno").value;
+const prijmeni=document.getElementById("prijmeni").value;
+const email=document.getElementById("email").value;
+const telefon=document.getElementById("telefon").value;
+
+if(!jmeno || !prijmeni || !email || !telefon){
+
+alert("Vyplňte všechna pole.");
+
+return;
+
+}
+
+let text="OBJEDNAVKA%0D%0A%0D%0A";
+
+produkty.forEach((produkt,index)=>{
+
+const ks=
+Number(document.getElementById(`ks${index}`).value);
+
+if(ks>0){
+
+text+=`${produkt.nazev} - ${ks} ks%0D%0A`;
+
+}
+
+});
+
+text+=`%0D%0APocet kusu: ${
+document.getElementById("kusy").innerText
+}`;
+
+text+=`%0D%0ACelkova cena: ${
+document.getElementById("cena").innerText
+} Kc`;
+
+text+=`%0D%0A%0D%0AZakaznik: ${jmeno} ${prijmeni}`;
+
+text+=`%0D%0AEmail: ${email}`;
+
+text+=`%0D%0ATelefon: ${telefon}`;
+
+window.location.href=
+`mailto:app@kostka-skola.cz?subject=Objednavka PixelFuel&body=${text}`;
+
+}
+
+</script>
+
+</body>
+</html>
